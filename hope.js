@@ -31,17 +31,17 @@ binance.websockets.trades(['BTCUSDT'], (trades) => {
   
           price = parseFloat(price);
           if(buy==0){
-              buy = price/1.001;
-              sell = price*1.001;
+              buy = price/1.01;
+              sell = price*1.01;
           }else{
               if(out){
-                if(price>(buy*1.001)){
-                    buy = price/1.001;
+                if(price>(buy*1.01)){
+                    buy = price/1.01;
                 }
                // console.log("Buy: "+buy+ "  price: "+price);
               }else{
-                  if(price<(sell/1.001)){
-                     sell = price*1.001;
+                  if(price<(sell/1.01)){
+                     sell = price*1.01;
                   }
                  // console.log("  price: "+price +"   sell: "+sell);
               }
@@ -54,7 +54,7 @@ binance.websockets.trades(['BTCUSDT'], (trades) => {
                 btc = USD/price;
                 
                 USD = 0;
-                sell = price*1.001;
+                sell = price*1.01;
                 log.info("IN: "+btc+ " Price: "+price + " fees: "+sumfeeUSD);
                 }
           }
@@ -66,8 +66,8 @@ binance.websockets.trades(['BTCUSDT'], (trades) => {
                 USD = USD - feeUSD;
                 sumfeeUSD+=feeUSD;
                 btc = 0;
-                buy = price/1.001;
-                log.info("OUT: "+USD+ " Price: "+price  + " fees: "+sumfeeUSD + " result: " + (USD + sumfeeUSD*0.8));
+                buy = price/1.01;
+                log.info("OUT: "+USD+ " Price: "+price  + " fees: "+sumfeeUSD + " result: " + (USD + sumfeeUSD*0.2));
                 }
           }
           
