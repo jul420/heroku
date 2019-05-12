@@ -1,10 +1,6 @@
-const binance = require('node-binance-api');
-const log = require('simple-node-logger').createSimpleLogger('hope.log');
-log.info("start");
-
-
-binance.options({
-  APIKEY: '9oOV1Ptu7x532yjpxPEhEQ27Hs4puv0Grom5hc9NBiqdwtl8AKtYBijGY5HfOA86',
+const Binance = require('node-binance-api');
+const binance = new Binance().options({
+    APIKEY: '9oOV1Ptu7x532yjpxPEhEQ27Hs4puv0Grom5hc9NBiqdwtl8AKtYBijGY5HfOA86',
   APISECRET: 'c7u9JqYYmQIqww4yto59E6l0wEoE4XYLZqMhpfRq0E0qnGBSEH7GnMQeHiwt8Y7W',
   useServerTime: true, // If you get timestamp errors, synchronize to server time at startup
   test: true, // If you want to use sandbox mode where orders are simulated
@@ -14,6 +10,9 @@ binance.options({
     log.info(log);
   }
 });
+
+const log = require('simple-node-logger').createSimpleLogger('hope.log');
+log.info("start");
 
 
 
