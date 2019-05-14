@@ -62,6 +62,7 @@ function placeBuyOrder(price){
         console.log(quantity + "  "+ price);
         binance.buy("BTCUSDT", quantity, price, {type:'LIMIT'}, (error, response) => {
             console.log("Limit Buy response", response);
+            log.info("Limit Buy response", response);
             console.log("order id: " + response.orderId);
             //console.log(error);
             currentOrderId = response.orderId;
@@ -83,6 +84,8 @@ function placeSellOrder(price){
         binance.sell("BTCUSDT", quantity, price, {type:'LIMIT'}, (error, response) => {
             console.log("Limit Sell response", response);
             console.log("order id: " + response.orderId);
+    
+            log.info("Limit Sell response", response);
             //console.log(error);
             currentOrderId = response.orderId;
             selling = false;
@@ -96,6 +99,7 @@ function updateBuyOrder(price){
         buying = true;
         binance.cancel("BTCUSDT", currentOrderId, (error, response, symbol) => {
         console.log(symbol+" cancel response:", response);
+        log.info(symbol+" cancel response:", response);
         placeBuyOrder(currentBuyPrice);
         });
     }
@@ -107,6 +111,7 @@ function updateSellOrder(price){
         selling = true;
         binance.cancel("BTCUSDT", currentOrderId, (error, response, symbol) => {
         console.log(symbol+" cancel response:", response);
+        log.info(symbol+" cancel response:", response)
         placeSellOrder(currentSellPrice);
         });
     }
@@ -156,9 +161,10 @@ function balance_update(data) {
                //buy = curPrice/priceSpan;
                //placeBuyOrder(buy);
                binance.orderStatus("BTCUSDT", currentOrderId, (error, orderStatus, symbol) => {
-                console.log(symbol+" order status:", orderStatus);
+               console.log(symbol+" order status:", orderStatus);
                 if(orderStatus.status=='FILLED'){
                     out = true;
+                    log.info('OUT:');
                     buy = curPrice/priceSpan;
                     placeBuyOrder(buy);
                 }
@@ -174,6 +180,7 @@ function balance_update(data) {
                     console.log(symbol+" order status:", orderStatus);
                     if(orderStatus.status=='FILLED'){
                         out = false;
+                        log.info('IN:');
                         sell = curPrice*priceSpan;
                         placeSellOrder(sell);
                     }
