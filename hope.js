@@ -133,10 +133,15 @@ binance.websockets.trades(['BTCUSDT'], (trades) => {
           price = parseFloat(price);
           curPrice = price;
           if(buy==0){
-              buy = price/priceSpan;
-              placeBuyOrder(buy);
-              sell = price*priceSpan;
-              placeSellOrder(sell);
+            buy = price/priceSpan;
+            sell = price*priceSpan;
+            
+              binance.cancelOrders("BTCUSDT", (error, response, symbol) => {
+                console.log(symbol+" cancel response:", response);
+                placeBuyOrder(buy);
+                placeSellOrder(sell);
+              });
+              
           }else{
               
                 if(price>(buy*priceSpan)){
@@ -185,12 +190,8 @@ function balance_update(data) {
                 console.log(symbol+" order status:", orderStatus);
                  if(orderStatus.status=='FILLED'){
                      //out = true;
-                     log.info('OUT:');
-                     buy = curPrice/priceSpan;
-                     placeBuyOrder(buy);
-                     sell = curPrice*priceSpan;
-                     placeSellOrder(sell);
                     // placeSellOrder()
+                    buy = 0;
                  }
            });
            }
@@ -219,12 +220,9 @@ function balance_update(data) {
             binance.orderStatus("BTCUSDT", currentBuyOrderId, (error, orderStatus, symbol) => {
                 console.log(symbol+" order status:", orderStatus);
                 if(orderStatus.status=='FILLED'){
-                    out = false;
+                    
                     log.info('IN:');
-                    sell = curPrice*priceSpan;
-                    placeSellOrder(sell);
-                    buy = curPrice/priceSpan;
-                    placeBuyOrder(buy);
+                    buy = 0;
                 }
             });
            }
