@@ -1,5 +1,5 @@
 
-/*
+
 const Binance = require('node-binance-api');
 const binance = new Binance().options({
     APIKEY: 'CjyKDv8uPxcx2ffUSWL7sGTEhfgssBWQg2QduZyfWcXIftExfGUuF962eoZAF9gf',
@@ -12,8 +12,8 @@ const binance = new Binance().options({
    // log.info(log);
   }
 });
-*/
 
+/*
 const binance = require('node-binance-api');
 binance.options({
     APIKEY: 'CjyKDv8uPxcx2ffUSWL7sGTEhfgssBWQg2QduZyfWcXIftExfGUuF962eoZAF9gf',
@@ -26,7 +26,7 @@ binance.options({
    // log.info(log);
   }
 });
-
+*/
 
 const log = require('simple-node-logger').createSimpleLogger('hope.log');
 log.info("start");
