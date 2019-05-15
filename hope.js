@@ -53,6 +53,7 @@ var priceSpan = 1.01;
 var tradeSize = 11;
 
 function placeBuyOrder(price){
+    if(!buying){
     buying = true;
     currentBuyPrice = price;
     binance.balance((error, balances) => {
@@ -75,9 +76,11 @@ function placeBuyOrder(price){
           });
         }
       });
+    }
 }
 
 function placeSellOrder(price){
+    if(!selling){
     selling = true;
     currentSellPrice = price;
     binance.balance((error, balances) => {
@@ -101,6 +104,7 @@ function placeSellOrder(price){
           });
         }
       });
+    }
 }
 
 function updateBuyOrder(price){
@@ -135,8 +139,8 @@ binance.websockets.trades(['BTCUSDT'], (trades) => {
           if(buy==0){
             buy = price/priceSpan;
             sell = price*priceSpan;
-            
-              binance.cancelOrders("BTCUSDT", (error, response, symbol) => {
+
+            binance.cancelOrders("BTCUSDT", (error, response, symbol) => {
                 console.log(symbol+" cancel response:", response);
                 placeBuyOrder(buy);
                 placeSellOrder(sell);
