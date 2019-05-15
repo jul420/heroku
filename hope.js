@@ -151,13 +151,13 @@ binance.websockets.trades(['BTCUSDT'], (trades) => {
               
                 if(price>(buy*priceSpan)){
                     buy = price/priceSpan;
-                    updateBuyOrder(buy);
+                   //updateBuyOrder(buy);
                 }
                // console.log("Buy: "+buy+ "  price: "+price);
             
                 if(price<(sell/priceSpan)){
                      sell = price*priceSpan;
-                     updateSellOrder(sell);
+                    // updateSellOrder(sell);
                 }
                  // console.log("  price: "+price +"   sell: "+sell);
               }
