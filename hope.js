@@ -1,4 +1,5 @@
 
+/*
 const Binance = require('node-binance-api');
 const binance = new Binance().options({
     APIKEY: 'CjyKDv8uPxcx2ffUSWL7sGTEhfgssBWQg2QduZyfWcXIftExfGUuF962eoZAF9gf',
@@ -11,7 +12,8 @@ const binance = new Binance().options({
    // log.info(log);
   }
 });
-/*
+*/
+
 const binance = require('node-binance-api');
 binance.options({
     APIKEY: 'CjyKDv8uPxcx2ffUSWL7sGTEhfgssBWQg2QduZyfWcXIftExfGUuF962eoZAF9gf',
@@ -24,7 +26,7 @@ binance.options({
    // log.info(log);
   }
 });
-*/
+
 
 const log = require('simple-node-logger').createSimpleLogger('hope.log');
 log.info("start");
@@ -40,21 +42,24 @@ var feeBTC = 0;
 var sumfeeBTC = 0;
 var feeUSD = 0;
 var sumfeeUSD = 0;
-var currentOrderId = false;
+var currentSellOrderId = false;
+var currentBuyOrderId = false;
 var buyState = 'no';
 var buying = false;
 var selling = false;
 var curPrice;
 var currentBuyPrice, currentSellPrice;
 var priceSpan = 1.01;
+var tradeSize = 11;
 
 function placeBuyOrder(price){
     buying = true;
     currentBuyPrice = price;
     binance.balance((error, balances) => {
         if ( error ) return console.error(error);
-        USD = balances.USDT.available-1;
-        var quantity = USD/price;
+        USD = balances.USDT.available;
+        if(USD>tradeSize){
+        var quantity = tradeSize/price;
         quantity = Math.floor(quantity*1000000)/1000000;
         
         price = Math.floor(currentBuyPrice*100)/100;
@@ -65,9 +70,10 @@ function placeBuyOrder(price){
             log.info("Limit Buy response", response);
             console.log("order id: " + response.orderId);
             //console.log(error);
-            currentOrderId = response.orderId;
+            currentBuyOrderId = response.orderId;
             buying = false;
           });
+        }
       });
 }
 
@@ -77,7 +83,10 @@ function placeSellOrder(price){
     binance.balance((error, balances) => {
         if ( error ) return console.error(error);
         btc = balances.BTC.available;
-        quantity = Math.floor(btc*1000000)/1000000;
+        if(btc*currentSellPrice>tradeSize){
+
+        
+        quantity = Math.floor((tradeSize/currentSellPrice)*1000000)/1000000;
         
         price = Math.floor(currentSellPrice*100)/100;
 
@@ -87,9 +96,10 @@ function placeSellOrder(price){
     
             log.info("Limit Sell response", response);
             //console.log(error);
-            currentOrderId = response.orderId;
+            currentSellOrderId = response.orderId;
             selling = false;
           });
+        }
       });
 }
 
@@ -97,7 +107,7 @@ function updateBuyOrder(price){
     currentBuyPrice = price;
     if(!buying){
         buying = true;
-        binance.cancel("BTCUSDT", currentOrderId, (error, response, symbol) => {
+        binance.cancel("BTCUSDT", currentBuyOrderId, (error, response, symbol) => {
         console.log(symbol+" cancel response:", response);
         log.info(symbol+" cancel response:", response);
         placeBuyOrder(currentBuyPrice);
@@ -109,7 +119,7 @@ function updateSellOrder(price){
     currentSellPrice = price;
     if(!selling){
         selling = true;
-        binance.cancel("BTCUSDT", currentOrderId, (error, response, symbol) => {
+        binance.cancel("BTCUSDT", currentSellOrderId, (error, response, symbol) => {
         console.log(symbol+" cancel response:", response);
         log.info(symbol+" cancel response:", response)
         placeSellOrder(currentSellPrice);
@@ -125,25 +135,24 @@ binance.websockets.trades(['BTCUSDT'], (trades) => {
           if(buy==0){
               buy = price/priceSpan;
               placeBuyOrder(buy);
-             //sell = price*priceSpan;
-             //placeSellOrder(sell);
+              sell = price*priceSpan;
+              placeSellOrder(sell);
           }else{
-              if(out){
+              
                 if(price>(buy*priceSpan)){
                     buy = price/priceSpan;
                     updateBuyOrder(buy);
                 }
                // console.log("Buy: "+buy+ "  price: "+price);
-              }else{
-                  if(price<(sell/priceSpan)){
+            
+                if(price<(sell/priceSpan)){
                      sell = price*priceSpan;
                      updateSellOrder(sell);
-                  }
+                }
                  // console.log("  price: "+price +"   sell: "+sell);
               }
           }
         
-  }
 );
 
 // The only time the user data (account balances) and order execution websockets will fire, is if you create or cancel an order, or an order gets filled or partially filled
@@ -156,6 +165,7 @@ function balance_update(data) {
         console.log(asset+"\tavailable: "+available+" ("+onOrder+" on order)");
         */
        if (asset == 'USDT') {
+           /*
            if((available>100)&&!out){
                //out = true;
                //buy = curPrice/priceSpan;
@@ -169,13 +179,29 @@ function balance_update(data) {
                     placeBuyOrder(buy);
                 }
             });
+            */
+           if(available>tradeSize){
+            binance.orderStatus("BTCUSDT", currentSellOrderId, (error, orderStatus, symbol) => {
+                console.log(symbol+" order status:", orderStatus);
+                 if(orderStatus.status=='FILLED'){
+                     //out = true;
+                     log.info('OUT:');
+                     buy = curPrice/priceSpan;
+                     placeBuyOrder(buy);
+                     sell = curPrice*priceSpan;
+                     placeSellOrder(sell);
+                    // placeSellOrder()
+                 }
+           });
            }
        }
 
        if (asset == 'BTC') {
+           /*
             if((available>0.01)&&out){
                 //out = false;
                 //sell = curPrice*priceSpan;
+                
                 binance.orderStatus("BTCUSDT", currentOrderId, (error, orderStatus, symbol) => {
                     console.log(symbol+" order status:", orderStatus);
                     if(orderStatus.status=='FILLED'){
@@ -188,6 +214,20 @@ function balance_update(data) {
                // placeSellOrder(sell);
                 //log.info("IN: "+btc+ " Price: "+price + " fees: "+sumfeeUSD);
             }
+            */
+           if(available*curPrice>tradeSize){
+            binance.orderStatus("BTCUSDT", currentBuyOrderId, (error, orderStatus, symbol) => {
+                console.log(symbol+" order status:", orderStatus);
+                if(orderStatus.status=='FILLED'){
+                    out = false;
+                    log.info('IN:');
+                    sell = curPrice*priceSpan;
+                    placeSellOrder(sell);
+                    buy = curPrice/priceSpan;
+                    placeBuyOrder(buy);
+                }
+            });
+           }
        }
 	}
 }
