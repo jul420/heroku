@@ -110,7 +110,6 @@ function placeSellOrder(price){
 function updateBuyOrder(price){
     currentBuyPrice = price;
     if(!buying){
-        buying = true;
         binance.cancel("BTCUSDT", currentBuyOrderId, (error, response, symbol) => {
         console.log(symbol+" cancel response:", response);
         log.info(symbol+" cancel response:", response);
@@ -122,7 +121,7 @@ function updateBuyOrder(price){
 function updateSellOrder(price){
     currentSellPrice = price;
     if(!selling){
-        selling = true;
+     
         binance.cancel("BTCUSDT", currentSellOrderId, (error, response, symbol) => {
         console.log(symbol+" cancel response:", response);
         log.info(symbol+" cancel response:", response)
@@ -151,13 +150,13 @@ binance.websockets.trades(['BTCUSDT'], (trades) => {
               
                 if(price>(buy*priceSpan)){
                     buy = price/priceSpan;
-                   //updateBuyOrder(buy);
+                   updateBuyOrder(buy);
                 }
                // console.log("Buy: "+buy+ "  price: "+price);
             
                 if(price<(sell/priceSpan)){
                      sell = price*priceSpan;
-                    // updateSellOrder(sell);
+                     updateSellOrder(sell);
                 }
                  // console.log("  price: "+price +"   sell: "+sell);
               }
