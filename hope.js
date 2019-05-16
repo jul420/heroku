@@ -198,6 +198,8 @@ function balance_update(data) {
                     //buy = 0;
                     sell = curPrice*priceSpan;
                     updateSellOrder(sell);
+                    buy = curPrice/priceSpan;
+                    updateBuyOrder(buy);
                  }
            });
            
@@ -231,6 +233,8 @@ function balance_update(data) {
                     log.info('IN:');
                     buy = curPrice/priceSpan;
                     updateBuyOrder(buy);
+                    sell = curPrice*priceSpan;
+                    updateSellOrder(sell);
                 }
             });
            }
