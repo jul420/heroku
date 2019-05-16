@@ -173,6 +173,7 @@ function balance_update(data) {
 		if ( available == "0.00000000" ) continue;
         console.log(asset+"\tavailable: "+available+" ("+onOrder+" on order)");
         */
+       
        if (asset == 'USDT') {
            /*
            if((available>100)&&!out){
@@ -189,6 +190,7 @@ function balance_update(data) {
                 }
             });
             */
+           
            if(available>tradeSize){
             binance.orderStatus("BTCUSDT", currentSellOrderId, (error, orderStatus, symbol) => {
                 console.log(symbol+" order status:", orderStatus);
@@ -196,13 +198,17 @@ function balance_update(data) {
                      //out = true;
                     // placeSellOrder()
                     //buy = 0;
+                    log.info('OUT:');
                     sell = curPrice*priceSpan;
                     updateSellOrder(sell);
+                    buy = curPrice/priceSpan;
+                    updateBuyOrder(buy);
+                    //updateBuyOrder
                  }
            });
            
            }
-       }
+        }
 
        if (asset == 'BTC') {
            /*
@@ -223,6 +229,7 @@ function balance_update(data) {
                 //log.info("IN: "+btc+ " Price: "+price + " fees: "+sumfeeUSD);
             }
             */
+           
            if(available*curPrice>tradeSize){
             binance.orderStatus("BTCUSDT", currentBuyOrderId, (error, orderStatus, symbol) => {
                 console.log(symbol+" order status:", orderStatus);
@@ -231,9 +238,12 @@ function balance_update(data) {
                     log.info('IN:');
                     buy = curPrice/priceSpan;
                     updateBuyOrder(buy);
+                    sell = curPrice*priceSpan;
+                    updateSellOrder(sell);
                 }
             });
            }
+           
        }
 	}
 }
