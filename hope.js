@@ -198,7 +198,7 @@ function balance_update(data) {
             binance.orderStatus("BTCUSDT", currentSellOrderId, (error, orderStatus, symbol) => {
                 console.log(symbol+" order status:", orderStatus);
                  if(orderStatus.status=='FILLED'){
-                   
+                   /*
                      //out = true;
                     // placeSellOrder()
                     //buy = 0;
@@ -209,6 +209,8 @@ function balance_update(data) {
                     updateBuyOrder(buy);
                     //updateBuyOrder
                     currentSellOrderId = 0;
+                    */
+                    buy = 0;
                  }
            });
            
@@ -239,13 +241,15 @@ function balance_update(data) {
             binance.orderStatus("BTCUSDT", currentBuyOrderId, (error, orderStatus, symbol) => {
                 console.log(symbol+" order status:", orderStatus);
                 if(orderStatus.status=='FILLED'){
-                    
+                    /*
                     log.info('IN:');
                     buy = curPrice/priceSpan;
                     updateBuyOrder(buy);
                     sell = curPrice*priceSpan;
                     updateSellOrder(sell);
                     currentBuyOrderId = 0;
+                    */
+                   buy = 0;
                 }
             });
            }
