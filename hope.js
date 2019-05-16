@@ -49,7 +49,7 @@ var buying = false;
 var selling = false;
 var curPrice;
 var currentBuyPrice, currentSellPrice;
-var priceSpan = 1.007;
+var priceSpan = 1.003;
 var tradeSize = 11;
 
 function placeBuyOrder(price){
@@ -198,7 +198,7 @@ function balance_update(data) {
             binance.orderStatus("BTCUSDT", currentSellOrderId, (error, orderStatus, symbol) => {
                 console.log(symbol+" order status:", orderStatus);
                  if(orderStatus.status=='FILLED'){
-                    currentSellOrderId = 0;
+                   
                      //out = true;
                     // placeSellOrder()
                     //buy = 0;
@@ -208,6 +208,7 @@ function balance_update(data) {
                     buy = curPrice/priceSpan;
                     updateBuyOrder(buy);
                     //updateBuyOrder
+                    currentSellOrderId = 0;
                  }
            });
            
@@ -238,12 +239,13 @@ function balance_update(data) {
             binance.orderStatus("BTCUSDT", currentBuyOrderId, (error, orderStatus, symbol) => {
                 console.log(symbol+" order status:", orderStatus);
                 if(orderStatus.status=='FILLED'){
-                    currentBuyOrderId = 0;
+                    
                     log.info('IN:');
                     buy = curPrice/priceSpan;
                     updateBuyOrder(buy);
                     sell = curPrice*priceSpan;
                     updateSellOrder(sell);
+                    currentBuyOrderId = 0;
                 }
             });
            }
