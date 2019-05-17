@@ -123,6 +123,7 @@ function updateBuyOrder(price){
         currentBuyOrderId = 0;
     }
     else if(!buying){  
+        buying = true;
         placeBuyOrder(currentBuyPrice);
     }
 }
@@ -139,6 +140,7 @@ function updateSellOrder(price){
         });
         currentSellOrderId = 0;
     }else if(!selling){
+        selling = true;
         placeSellOrder(currentSellPrice);
     }
 }
