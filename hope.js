@@ -31,11 +31,7 @@ binance.options({
 const log = require('simple-node-logger').createSimpleLogger('hope.log');
 log.info("start");
 
-
-
-var USD = 100;
-var out = true;
-var btc = 0;
+var btc,USD;
 var buy = 0;
 var sell = 0;
 var feeBTC = 0;
@@ -44,20 +40,23 @@ var feeUSD = 0;
 var sumfeeUSD = 0;
 var currentSellOrderId = false;
 var currentBuyOrderId = false;
-var buyState = 'no';
+
 var buying = false;
 var selling = false;
+
 var curPrice;
 var currentBuyPrice, currentSellPrice;
-var priceSpan = 1.009;
+
+var priceSpan = 1.2;
 var tradeSize = 11;
 
 function placeBuyOrder(price){
+    currentBuyPrice = price;
     if(!buying){
     buying = true;
-    currentBuyPrice = price;
+    log.info('try to buy');
     binance.balance((error, balances) => {
-        if ( error ) return console.error(error);
+        log.info(error);
         USD = balances.USDT.available;
         if(USD>tradeSize){
         var quantity = tradeSize/price;
@@ -65,26 +64,31 @@ function placeBuyOrder(price){
         
         price = Math.floor(currentBuyPrice*100)/100;
 
-        console.log(quantity + "  "+ price);
+      //  console.log(quantity + "  "+ price);
         binance.buy("BTCUSDT", quantity, price, {type:'LIMIT'}, (error, response) => {
-            console.log("Limit Buy response", response);
+        //    console.log("Limit Buy response", response);
+            log.info(error);
             log.info("Limit Buy response", response);
-            console.log("order id: " + response.orderId);
+        //    console.log("order id: " + response.orderId);
             //console.log(error);
             currentBuyOrderId = response.orderId;
             buying = false;
           });
+        }else{
+            log.info('not enough USD to buy');
+            buying = false;
         }
       });
     }
 }
 
 function placeSellOrder(price){
+    currentSellPrice = price;
     if(!selling){
     selling = true;
-    currentSellPrice = price;
+    log.info('try to sell');
     binance.balance((error, balances) => {
-        if ( error ) return console.error(error);
+        log.info(error);
         btc = balances.BTC.available;
         if(btc*currentSellPrice>tradeSize){
 
@@ -94,14 +98,17 @@ function placeSellOrder(price){
         price = Math.floor(currentSellPrice*100)/100;
 
         binance.sell("BTCUSDT", quantity, price, {type:'LIMIT'}, (error, response) => {
-            console.log("Limit Sell response", response);
-            console.log("order id: " + response.orderId);
-    
+          //  console.log("Limit Sell response", response);
+          //  console.log("order id: " + response.orderId);
+            log.info(error);
             log.info("Limit Sell response", response);
             //console.log(error);
             currentSellOrderId = response.orderId;
             selling = false;
           });
+        }else{
+            log.info('not enough btc to sell');
+            selling = false;
         }
       });
     }
@@ -109,27 +116,33 @@ function placeSellOrder(price){
 
 function updateBuyOrder(price){
     currentBuyPrice = price;
-    if(!buying){
+    if(!buying&&currentBuyOrderId!=0){
+        log.info('canceling BuyOrder');
         binance.cancel("BTCUSDT", currentBuyOrderId, (error, response, symbol) => {
         
-        console.log(symbol+" cancel response:", response);
+     //   console.log(symbol+" cancel response:", response);
         log.info(symbol+" cancel response:", response);
         placeBuyOrder(currentBuyPrice);
         });
         currentBuyOrderId = 0;
     }
+    else if(!buying){  
+        placeBuyOrder(currentBuyPrice);
+    }
 }
 
 function updateSellOrder(price){
     currentSellPrice = price;
-    if(!selling){
-     
+    if(!selling&&currentSellOrderId!=0){
+        log.info('canceling SellOrder');
         binance.cancel("BTCUSDT", currentSellOrderId, (error, response, symbol) => {
-        console.log(symbol+" cancel response:", response);
+       // console.log(symbol+" cancel response:", response);
         log.info(symbol+" cancel response:", response)
         placeSellOrder(currentSellPrice);
         });
         currentSellOrderId = 0;
+    }else if(!selling){
+        placeSellOrder(currentSellPrice);
     }
 }
 
@@ -139,12 +152,14 @@ binance.websockets.trades(['BTCUSDT'], (trades) => {
           price = parseFloat(price);
           curPrice = price;
           if(buy==0){
-            buy = price/priceSpan;
-            sell = price*priceSpan;
-
+        
+            buy = (price/priceSpan)+1;
+            sell = (price*priceSpan)-1;
+            log.info('canceling all Orders');
             binance.cancelOrders("BTCUSDT", (error, response, symbol) => {
-                console.log(symbol+" cancel response:", response);
-                console.log(error);
+               // console.log(symbol+" cancel response:", response);
+               // console.log(error);
+               log.info(error);
                 placeBuyOrder(buy);
                 placeSellOrder(sell);
               });
@@ -152,13 +167,13 @@ binance.websockets.trades(['BTCUSDT'], (trades) => {
           }else{
               
                 if(price>(buy*priceSpan)){
-                    buy = price/priceSpan;
+                    buy = (price/priceSpan)+1;
                     updateBuyOrder(buy);
                 }
                // console.log("Buy: "+buy+ "  price: "+price);
             
                 if(price<(sell/priceSpan)){
-                     sell = price*priceSpan;
+                     sell = (price*priceSpan)-1;
                      updateSellOrder(sell);
                 }
                  // console.log("  price: "+price +"   sell: "+sell);
@@ -172,88 +187,39 @@ function balance_update(data) {
 	//console.log("Balance Update");
 	for ( let obj of data.B ) {
         let { a:asset, f:available, l:onOrder } = obj;
-        /*
-		if ( available == "0.00000000" ) continue;
-        console.log(asset+"\tavailable: "+available+" ("+onOrder+" on order)");
-        */
        
        if (asset == 'USDT') {
-           /*
-           if((available>100)&&!out){
-               //out = true;
-               //buy = curPrice/priceSpan;
-               //placeBuyOrder(buy);
-               binance.orderStatus("BTCUSDT", currentOrderId, (error, orderStatus, symbol) => {
-               console.log(symbol+" order status:", orderStatus);
-                if(orderStatus.status=='FILLED'){
-                    out = true;
-                    log.info('OUT:');
-                    buy = curPrice/priceSpan;
-                    placeBuyOrder(buy);
-                }
-            });
-            */
            
            if(available>tradeSize){
+               if(currentSellOrderId!=0){
             binance.orderStatus("BTCUSDT", currentSellOrderId, (error, orderStatus, symbol) => {
-                console.log(symbol+" order status:", orderStatus);
+              //  console.log(symbol+" order status:", orderStatus);
                  if(orderStatus.status=='FILLED'){
-                   /*
-                     //out = true;
-                    // placeSellOrder()
-                    //buy = 0;
-                    log.info('OUT:');
-                    sell = curPrice*priceSpan;
-                    updateSellOrder(sell);
-                    buy = curPrice/priceSpan;
-                    updateBuyOrder(buy);
-                    //updateBuyOrder
-                    currentSellOrderId = 0;
-                    */
                     buy = 0;
+                    currentSellOrderId = 0;
+                    currentBuyOrderId = 0;
                  }
            });
-           
+        }
            }
         }
 
        if (asset == 'BTC') {
-           /*
-            if((available>0.01)&&out){
-                //out = false;
-                //sell = curPrice*priceSpan;
-                
-                binance.orderStatus("BTCUSDT", currentOrderId, (error, orderStatus, symbol) => {
-                    console.log(symbol+" order status:", orderStatus);
-                    if(orderStatus.status=='FILLED'){
-                        out = false;
-                        log.info('IN:');
-                        sell = curPrice*priceSpan;
-                        placeSellOrder(sell);
-                    }
-                });
-               // placeSellOrder(sell);
-                //log.info("IN: "+btc+ " Price: "+price + " fees: "+sumfeeUSD);
-            }
-            */
            
            if(available*curPrice>tradeSize){
-            binance.orderStatus("BTCUSDT", currentBuyOrderId, (error, orderStatus, symbol) => {
-                console.log(symbol+" order status:", orderStatus);
-                if(orderStatus.status=='FILLED'){
-                    /*
-                    log.info('IN:');
-                    buy = curPrice/priceSpan;
-                    updateBuyOrder(buy);
-                    sell = curPrice*priceSpan;
-                    updateSellOrder(sell);
+            if(currentBuyOrderId!=0){
+                binance.orderStatus("BTCUSDT", currentBuyOrderId, (error, orderStatus, symbol) => {
+                   // console.log(symbol+" order status:", orderStatus);
+                    if(orderStatus.status=='FILLED'){
+                    
+                    buy = 0;
+                    currentSellOrderId = 0;
                     currentBuyOrderId = 0;
-                    */
-                   buy = 0;
-                }
-            });
+
+                    }
+                });
            }
-           
+        }
        }
 	}
 }
@@ -261,13 +227,13 @@ function execution_update(data) {
 	let { x:executionType, s:symbol, p:price, q:quantity, S:side, o:orderType, i:orderId, X:orderStatus } = data;
 	if ( executionType == "NEW" ) {
 		if ( orderStatus == "REJECTED" ) {
-			console.log("Order Failed! Reason: "+data.r);
+	//		console.log("Order Failed! Reason: "+data.r);
 		}
-		console.log(symbol+" "+side+" "+orderType+" ORDER #"+orderId+" ("+orderStatus+")");
-		console.log("..price: "+price+", quantity: "+quantity);
+	//	console.log(symbol+" "+side+" "+orderType+" ORDER #"+orderId+" ("+orderStatus+")");
+	//	console.log("..price: "+price+", quantity: "+quantity);
 		return;
 	}
 	//NEW, CANCELED, REPLACED, REJECTED, TRADE, EXPIRED
-	console.log(symbol+"\t"+side+" "+executionType+" "+orderType+" ORDER #"+orderId);
+	//console.log(symbol+"\t"+side+" "+executionType+" "+orderType+" ORDER #"+orderId);
 }
 binance.websockets.userData(balance_update, execution_update);
