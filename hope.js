@@ -47,7 +47,7 @@ var selling = false;
 var curPrice;
 var currentBuyPrice, currentSellPrice;
 
-var priceSpan = 1.5;
+var priceSpan = 1.2;
 var tradeSize = 11;
 
 function placeBuyOrder(price){
