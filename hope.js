@@ -160,8 +160,8 @@ binance.websockets.trades(['BTCUSDT'], (trades) => {
                // console.log(symbol+" cancel response:", response);
                // console.log(error);
                log.info(error);
-                placeBuyOrder(buy);
-                placeSellOrder(sell);
+                updateBuyOrder(buy);
+                updateSellOrder(sell);
               });
               
           }else{
