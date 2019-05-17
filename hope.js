@@ -47,14 +47,14 @@ var selling = false;
 var curPrice;
 var currentBuyPrice, currentSellPrice;
 
-var priceSpan = 1.2;
+var priceSpan = 1.5;
 var tradeSize = 11;
 
 function placeBuyOrder(price){
     currentBuyPrice = price;
     if(!buying){
     buying = true;
-    log.info('try to buy');
+    log.info("try to buy");
     binance.balance((error, balances) => {
         log.info(error);
         USD = balances.USDT.available;
@@ -75,7 +75,7 @@ function placeBuyOrder(price){
             buying = false;
           });
         }else{
-            log.info('not enough USD to buy');
+            log.info("not enough USD to buy");
             buying = false;
         }
       });
@@ -86,7 +86,7 @@ function placeSellOrder(price){
     currentSellPrice = price;
     if(!selling){
     selling = true;
-    log.info('try to sell');
+    log.info("try to sell");
     binance.balance((error, balances) => {
         log.info(error);
         btc = balances.BTC.available;
@@ -107,7 +107,7 @@ function placeSellOrder(price){
             selling = false;
           });
         }else{
-            log.info('not enough btc to sell');
+            log.info("not enough btc to sell");
             selling = false;
         }
       });
@@ -117,7 +117,7 @@ function placeSellOrder(price){
 function updateBuyOrder(price){
     currentBuyPrice = price;
     if(!buying&&currentBuyOrderId!=0){
-        log.info('canceling BuyOrder');
+        log.info("canceling BuyOrder");
         binance.cancel("BTCUSDT", currentBuyOrderId, (error, response, symbol) => {
         
      //   console.log(symbol+" cancel response:", response);
@@ -134,7 +134,7 @@ function updateBuyOrder(price){
 function updateSellOrder(price){
     currentSellPrice = price;
     if(!selling&&currentSellOrderId!=0){
-        log.info('canceling SellOrder');
+        log.info("canceling SellOrder");
         binance.cancel("BTCUSDT", currentSellOrderId, (error, response, symbol) => {
        // console.log(symbol+" cancel response:", response);
         log.info(symbol+" cancel response:", response)
@@ -155,7 +155,7 @@ binance.websockets.trades(['BTCUSDT'], (trades) => {
         
             buy = (price/priceSpan)+1;
             sell = (price*priceSpan)-1;
-            log.info('canceling all Orders');
+            log.info("canceling all Orders");
             binance.cancelOrders("BTCUSDT", (error, response, symbol) => {
                // console.log(symbol+" cancel response:", response);
                // console.log(error);
