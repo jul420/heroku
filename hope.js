@@ -52,8 +52,6 @@ var tradeSize = 11;
 
 function placeBuyOrder(price){
     currentBuyPrice = price;
-    if(!buying){
-    buying = true;
     log.info("try to buy");
     binance.balance((error, balances) => {
         log.info(error);
@@ -78,14 +76,12 @@ function placeBuyOrder(price){
             log.info("not enough USD to buy");
             buying = false;
         }
-      });
-    }
+    });
+
 }
 
 function placeSellOrder(price){
     currentSellPrice = price;
-    if(!selling){
-    selling = true;
     log.info("try to sell");
     binance.balance((error, balances) => {
         log.info(error);
@@ -111,13 +107,13 @@ function placeSellOrder(price){
             selling = false;
         }
       });
-    }
 }
 
 function updateBuyOrder(price){
     currentBuyPrice = price;
     if(!buying&&currentBuyOrderId!=0){
         log.info("canceling BuyOrder");
+        buying = true;
         binance.cancel("BTCUSDT", currentBuyOrderId, (error, response, symbol) => {
         
      //   console.log(symbol+" cancel response:", response);
@@ -135,6 +131,7 @@ function updateSellOrder(price){
     currentSellPrice = price;
     if(!selling&&currentSellOrderId!=0){
         log.info("canceling SellOrder");
+        selling = true;
         binance.cancel("BTCUSDT", currentSellOrderId, (error, response, symbol) => {
        // console.log(symbol+" cancel response:", response);
         log.info(symbol+" cancel response:", response)
@@ -146,6 +143,8 @@ function updateSellOrder(price){
     }
 }
 
+var starting = false;
+
 binance.websockets.trades(['BTCUSDT'], (trades) => {
   let {e:eventType, E:eventTime, s:symbol, p:price, q:quantity, m:maker, a:tradeId} = trades;
   
@@ -156,25 +155,28 @@ binance.websockets.trades(['BTCUSDT'], (trades) => {
             buy = (price/priceSpan)+1;
             sell = (price*priceSpan)-1;
             log.info("canceling all Orders");
+            starting = true;
             binance.cancelOrders("BTCUSDT", (error, response, symbol) => {
                // console.log(symbol+" cancel response:", response);
                // console.log(error);
                log.info(error);
                 updateBuyOrder(buy);
                 updateSellOrder(sell);
+                starting = false;
               });
               
           }else{
-              
-                if(price>(buy*priceSpan)){
-                    buy = (price/priceSpan)+1;
-                    updateBuyOrder(buy);
-                }
-               // console.log("Buy: "+buy+ "  price: "+price);
-            
-                if(price<(sell/priceSpan)){
-                     sell = (price*priceSpan)-1;
-                     updateSellOrder(sell);
+                if(!starting){
+                    if(price>(buy*priceSpan)){
+                        buy = (price/priceSpan)+1;
+                        updateBuyOrder(buy);
+                    }
+                // console.log("Buy: "+buy+ "  price: "+price);
+                
+                    if(price<(sell/priceSpan)){
+                        sell = (price*priceSpan)-1;
+                        updateSellOrder(sell);
+                    }
                 }
                  // console.log("  price: "+price +"   sell: "+sell);
               }
